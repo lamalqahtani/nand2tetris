@@ -8,23 +8,54 @@
 // i.e. writes "black" in every pixel. When no key is pressed, 
 // the screen should be cleared.
 
-//addr = SCREEN address (16384)
+(START)
+
+//store the SCREEN address in a pointer addr
 @SCREEN
 D=A
 @addr
 M=D
 
-//i is the number of iterations.
-@i
-M=0
-
-//R0 will hold the last address offset of the screen memory map (the maximum number of i). (8191)
-@R0
-D=M
+//get the maximum iteration number (8191)
+@8191
+D=A
 @max
 M=D
 
-(LOOP)
+//set a color variable to 0 at first, and update it to 1 if a key is pressed
+//@color
+//M=0
+
+//i for iterations count
+@i
+M=0
+
+
+//check the KBD value (if 0 then no key is pressed, otherwise a key is pressed)
+@KBD
+D=M
+@BLACK
+D;JGT
+
+
+(WHITE)
+@i
+D=M
+@addr
+A=M+D
+M=0
+@i
+M=M+1
+@max
+D= M-D
+@WHITE
+D;JGT
+
+@START
+0;JMP
+
+
+(BLACK)
 @i
 D=M
 @addr
@@ -33,15 +64,14 @@ M=-1
 @i
 M=M+1
 @max
-D= M-D // if max-i == 0 go to the end of the program.
-@END
-D; JEQ
+D= M-D
+@BLACK
+D;JGT
 
-@LOOP
+
+@START
 0;JMP
 
 
-(END)
-@END
-0;JMP
+
 
