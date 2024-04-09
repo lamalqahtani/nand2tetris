@@ -28,7 +28,6 @@ M=D // i = RAM[1]
 @ZERO
 D;JEQ
 
-//before 
 (LOOP)
 @i
 M=M-1
