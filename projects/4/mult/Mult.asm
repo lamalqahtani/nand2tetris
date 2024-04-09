@@ -43,10 +43,8 @@ M = M+D // R0= R0+ base
 0;JMP
 
 (ZERO)
-@0
-D=A
 @R2
-M=D
+M=0
 @END
 0;JMP
 
