@@ -32,5 +32,35 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+    Not(in=instruction[15], out=isAInstruction); //true if the instruction is A-Instruction
+    Or(a=isAInstruction, b=instruction[5], out =loadAReg); 
+    And(a=instruction[15], b=instruction[4], out=loadDReg); //if the instruction is C-Instruction and the second d flag is true then load register D.
+
+    //writeM
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    Mux16(a=instruction, b=outALU, sel=instruction[15], out=outMux1);
+    Mux16(a=AReg, b=inM, sel=instruction[12], out=outMux2); 
+
+    //Registers
+    ARegister(in=outMux1 ,load=loadAReg ,out=AReg, out[0..14]=addressM);
+    DRegister(in=outALU ,load=loadDReg ,out=DReg);
+    
+    //ALU
+    ALU(x=DReg ,y=outMux2 ,zx=instruction[11] ,nx=instruction[10] ,zy=instruction[9] ,ny=instruction[8] ,f=instruction[7] ,no=instruction[6] ,out= outM, out=outALU ,zr=zr ,ng=ng); //DReg (found)
+
+
+    //PC
+        Not(in=ng, out=notNG); 
+    Not(in=zr, out=notZR);
+    And(a=notNG, b=notZR, out = ps); //if true, then the ALU output is positive 
+    And(a=instruction[0] ,b=ps ,out=load0); 
+    And(a=instruction[1] ,b=zr ,out=load1); 
+    And(a=instruction[2] ,b=ng ,out=load2); 
+    Or(a=load0 ,b=load1 ,out=loadA );
+    Or(a=loadA ,b=load2 ,out=loadB );
+
+    And(a=instruction[15], b=loadB, out=jump); //jump if the instruction is C-Instruction and the jump condition is met.
+    PC(in=AReg ,load=jump ,inc=true ,reset=reset ,out[0..14]=pc); 
+
 }
