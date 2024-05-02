@@ -24,6 +24,7 @@ public class Assembler {
             // write.newLine();
             // write.flush();
 
+            //PASS 1
             String line = read.readLine();
             while (line != null) {
                 if (!line.isEmpty()) {
@@ -38,7 +39,7 @@ public class Assembler {
             }
             read.close();
 
-            
+            //PASS 2
             String line1 = read1.readLine();
             while (line1 != null) {
                 if (!line1.isEmpty()) {
@@ -65,9 +66,9 @@ public class Assembler {
 class Parser {
     static int line = 0;
     String source; // the file content (line)
-    int start = 0;
+    int start = 0; //the current character index of the line.
     // char c;
-    List<String> tokens = new ArrayList<>();
+    static List<String> tokens = new ArrayList<>();
     static Hashtable<String, Integer> symbolTable = new Hashtable<String, Integer>();
     static boolean isFirstPass;
 
@@ -140,15 +141,21 @@ class Parser {
             switch (c) {
             case '@':
             start++;
-            if(isNumber(c)){
-            System.out.println("pass to A instruction translator");
+            //if A instruction, then we have two paths. First is handling a number directly. Second is handling a symbol which we already have in our symbol table.
+            if(isNumber(source.charAt(start))){
+                // first path: handling actual numbers
+                System.out.println("value: " + getAInstValue(start));
+                System.out.println("pass to A instruction translator");
+
             } else{
-            //if a symbol, decode the symbol using the symbol table and send it to C instruction translator.
-            System.out.println("pass to C instruction translator");
+                //second path: handling symbols.
+                System.out.println(getAInstValue(start)+": "+symbolTable.get(getAInstValue(start)));
+                System.out.println("pass to A instruction translator");
             }
             break;
 
             default:
+            // if not starting with @, then it is a C instruction.
             break;
             }
         }
@@ -156,7 +163,16 @@ class Parser {
     }
 
     public boolean isNumber(char c) {
-        return 30 <= c || c <= 39;
+        return '0' <= c && c <= '9';
+    }
+
+    //Not yet used, but we can use it to return the current character instead of using start++ and source.charAt(start).
+    public char getCurrentChar(){
+        return source.charAt(start);
+    }
+
+    public String getAInstValue(int start){
+        return source.substring(start, source.length());
     }
 
     public void printSymbolTable() {
