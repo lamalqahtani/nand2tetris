@@ -47,6 +47,7 @@ public class Assembler {
                         Parser parser = new Parser(line1);
                         Parser.isFirstPass = false;
                         parser.scanTokens();
+                        parser.parseTokens();
                     }
                 }
                 line1 = read1.readLine();
@@ -68,7 +69,7 @@ class Parser {
     String source; // the file content (line)
     int start = 0; //the current character index of the line.
     // char c;
-    static List<String> tokens = new ArrayList<>();
+    static List<Instruction> tokens = new ArrayList<>(); //will hold all the tokens that have been scanned
     static Hashtable<String, Integer> symbolTable = new Hashtable<String, Integer>();
     static boolean isFirstPass;
 
@@ -146,16 +147,22 @@ class Parser {
                 // first path: handling actual numbers
                 System.out.println("value: " + getAInstValue(start));
                 System.out.println("pass to A instruction translator");
+                tokens.add(new AInstruction("A",  Integer.parseInt(getAInstValue(start))));
 
             } else{
                 //second path: handling symbols.
                 System.out.println(getAInstValue(start)+": "+symbolTable.get(getAInstValue(start)));
                 System.out.println("pass to A instruction translator");
+                tokens.add(new AInstruction("A", symbolTable.get(getAInstValue(start))));
             }
             break;
 
             default:
             // if not starting with @, then it is a C instruction.
+            if(c != '@' ){
+                //ignore C instructions for now.
+                
+            }
             break;
             }
         }
@@ -195,4 +202,77 @@ class Parser {
         }
     }
 
+    public void printTokens(){
+        for(Instruction inst : tokens){
+            if(inst instanceof AInstruction){
+                // System.out.println("***** " + ((AInstruction)inst).value + " *****");
+                System.out.println(inst.toString());
+            }else{
+                System.out.println(inst.toString());
+            }
+        }
+    }
+
+    public void parseTokens(){
+        String placeholder = "000000000000000";
+        String value = null;
+        for(Instruction inst : tokens){
+            if(inst instanceof AInstruction){
+                value = Integer.toBinaryString(((AInstruction)inst).value);
+                System.out.println("*****");
+                System.out.println(inst.toString());
+                System.out.println("*** CONV *** " + value );
+                System.out.println("0" + placeholder.substring(0, placeholder.length() - value.length()) + value);
+                System.out.println("*****");
+
+                //return "0"+ placeholder.substring(placeholder.length() - value.length(), placeholder.length());
+                
+            }else{
+                System.out.println(inst.toString());
+            }
+        }
+    }
+
+}
+
+
+// Defining the type of instructions.
+class Instruction{
+    String type;
+    public Instruction(String type){
+        this.type = type;
+    }
+    @Override
+    public String toString() {
+        return "Type: " + this.type;
+    }
+}
+
+class AInstruction extends Instruction{
+    int value;
+    public AInstruction(String type, int value){
+        super(type);
+        this.value = value;
+    }
+    @Override
+    public String toString() {
+        return super.toString() + " Value: " + this.value;
+    }
+}
+
+class CInstruction extends Instruction{
+    String comp;
+    String dest;
+    String jmp;
+
+    public CInstruction(String type, String comp, String dest, String jmp) {
+        super(type);
+        this.comp = comp;
+        this.dest = dest;
+        this.jmp = jmp;
+    }
+    @Override
+    public String toString() {
+        return super.toString() + " Comp: " + this.comp + " Dest: " + this.dest + " Jmp: " + this.jmp;
+    }
 }
