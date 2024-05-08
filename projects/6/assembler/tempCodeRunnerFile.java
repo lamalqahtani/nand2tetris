@@ -1,1 +1,2 @@
-value
+cInst.dest = tmp;
+                        tmp = null;

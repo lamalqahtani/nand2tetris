@@ -72,6 +72,41 @@ class Parser {
     static List<Instruction> tokens = new ArrayList<>(); //will hold all the tokens that have been scanned
     static Hashtable<String, Integer> symbolTable = new Hashtable<String, Integer>();
     static boolean isFirstPass;
+    static Hashtable<String, String> cInstructionTableComp;
+    static {
+        //a==0
+        cInstructionTableComp = new Hashtable<String, String>();
+        cInstructionTableComp.put("0", "0101010");
+        cInstructionTableComp.put("1", "0111111");
+        cInstructionTableComp.put("-1", "0111010");
+        cInstructionTableComp.put("D", "0001100");
+        cInstructionTableComp.put("A", "0110000");
+        cInstructionTableComp.put("!D", "0001101");
+        cInstructionTableComp.put("!A", "0110001");
+        cInstructionTableComp.put("-D", "0001111");
+        cInstructionTableComp.put("-A", "0110011");
+        cInstructionTableComp.put("D+1", "0011111");
+        cInstructionTableComp.put("A+1", "0110111");
+        cInstructionTableComp.put("D-1", "0001110");
+        cInstructionTableComp.put("A-1", "0110010");
+        cInstructionTableComp.put("D+A", "0000010");
+        cInstructionTableComp.put("D-A", "0010011");
+        cInstructionTableComp.put("A-D", "0000111");
+        cInstructionTableComp.put("D&A", "0000000");
+        cInstructionTableComp.put("D|A", "0010101");
+
+        //a==1
+        cInstructionTableComp.put("M", "1110000");
+        cInstructionTableComp.put("!M", "1110001");
+        cInstructionTableComp.put("-M", "1110011");
+        cInstructionTableComp.put("M+1", "1110111");
+        cInstructionTableComp.put("M-1", "1110010");
+        cInstructionTableComp.put("D+M", "1000010");
+        cInstructionTableComp.put("D-M", "1010011");
+        cInstructionTableComp.put("M-D", "1000111");
+        cInstructionTableComp.put("D&M", "1000000");
+        cInstructionTableComp.put("D|M", "1010101");
+}
 
     public Parser(String src) {
         source = src;
@@ -159,9 +194,32 @@ class Parser {
 
             default:
             // if not starting with @, then it is a C instruction.
-            if(c != '@' ){
-                //ignore C instructions for now.
+            if(c != '@' && c!='('){
+                String tmp = String.valueOf(source.charAt(start));
+                CInstruction cInst = new CInstruction("C", null, null, null);
                 
+                //the start should be updated before every iteration. (I updated the start before the condition so the because the first character was already read which is the initial value of tmp)
+                while (++start < source.length() && (c = source.charAt(start)) != 0) {
+                    if(c == '='){
+                        cInst.dest = tmp;
+                        tmp = "";
+                        continue;
+                    }if(c == ';'){
+                        cInst.jmp = source.substring(start+1);
+                        break;
+                    }
+
+                    tmp = tmp + String.valueOf(c);
+                    cInst.comp = tmp;
+                }
+                tokens.add(cInst);
+                
+                // System.out.println("------");
+                // System.out.println(tmp);
+                // System.out.println("dest: " + cInst.dest);
+                // System.out.println("comp: " + cInst.comp);
+                // System.out.println("jmp: " + cInst.jmp);
+                // System.out.println("------");
             }
             break;
             }
@@ -219,16 +277,22 @@ class Parser {
         for(Instruction inst : tokens){
             if(inst instanceof AInstruction){
                 value = Integer.toBinaryString(((AInstruction)inst).value);
-                System.out.println("*****");
+                System.out.println("**BA**");
                 System.out.println(inst.toString());
                 System.out.println("*** CONV *** " + value );
                 System.out.println("0" + placeholder.substring(0, placeholder.length() - value.length()) + value);
-                System.out.println("*****");
-
+                System.out.println("**EA**");
                 //return "0"+ placeholder.substring(placeholder.length() - value.length(), placeholder.length());
-                
             }else{
+                value = "0000";
+                CInstruction cInst = ((CInstruction)inst);
+                System.out.println("**BC**");
                 System.out.println(inst.toString());
+                System.out.println("*** Dest *** " + cInst.dest );
+                System.out.println("*** Comp *** " + cInstructionTableComp.get(cInst.comp) );
+                System.out.println("*** Jmp *** " + cInst.jmp );
+                System.out.println("111" + value);
+                System.out.println("**EC**");
             }
         }
     }
