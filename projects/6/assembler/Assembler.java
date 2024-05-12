@@ -16,13 +16,6 @@ public class Assembler {
             BufferedReader read = new BufferedReader(reader);
             BufferedReader read1 = new BufferedReader(reader1);
             BufferedWriter write = new BufferedWriter(writer);
-            // write.append("test0");
-            // write.newLine();
-            // write.append("test1");
-            // write.newLine();
-            // write.append("test2");
-            // write.newLine();
-            // write.flush();
 
             //PASS 1
             String line = read.readLine();
@@ -48,6 +41,9 @@ public class Assembler {
                         Parser.isFirstPass = false;
                         parser.scanTokens();
                         parser.parseTokens();
+                        parser.binary.forEach(bin-> {
+                            System.out.println(bin);
+                        });
                     }
                 }
                 line1 = read1.readLine();
@@ -69,10 +65,13 @@ class Parser {
     String source; // the file content (line)
     int start = 0; //the current character index of the line.
     // char c;
-    static List<Instruction> tokens = new ArrayList<>(); //will hold all the tokens that have been scanned
+    static List<Instruction> tokens = new ArrayList<>(); //will hold all the tokens that have been scanned.
+    static List<String> binary = new ArrayList<>(); //this should contains the parser result of binary code.
     static Hashtable<String, Integer> symbolTable = new Hashtable<String, Integer>();
     static boolean isFirstPass;
     static Hashtable<String, String> cInstructionTableComp;
+    static Hashtable<String, String> cInstructionTableDest;
+    static Hashtable<String, String> cInstructionTableJmp;
     static {
         //a==0
         cInstructionTableComp = new Hashtable<String, String>();
@@ -108,6 +107,29 @@ class Parser {
         cInstructionTableComp.put("D|M", "1010101");
 }
 
+static {
+    cInstructionTableDest = new Hashtable<String, String>();
+    cInstructionTableDest.put("null", "000");
+    cInstructionTableDest.put("M", "001");
+    cInstructionTableDest.put("D", "010");
+    cInstructionTableDest.put("DM", "011");
+    cInstructionTableDest.put("A", "100");
+    cInstructionTableDest.put("AM", "101");
+    cInstructionTableDest.put("AD", "110");
+    cInstructionTableDest.put("ADM", "111");
+}
+
+static {
+    cInstructionTableJmp = new Hashtable<String, String>();
+    // cInstructionTableJmp.put("null", "000");
+    cInstructionTableJmp.put("JGT", "001");
+    cInstructionTableJmp.put("JEQ", "010");
+    cInstructionTableJmp.put("JGE", "011");
+    cInstructionTableJmp.put("JLT", "100");
+    cInstructionTableJmp.put("JNE", "101");
+    cInstructionTableJmp.put("JLE", "110");
+    cInstructionTableJmp.put("JMP", "111");
+}
     public Parser(String src) {
         source = src;
         // c = source.charAt(start);
@@ -281,19 +303,27 @@ class Parser {
                 System.out.println(inst.toString());
                 System.out.println("*** CONV *** " + value );
                 System.out.println("0" + placeholder.substring(0, placeholder.length() - value.length()) + value);
+                value = "0" + placeholder.substring(0, placeholder.length() - value.length()) + value;
                 System.out.println("**EA**");
                 //return "0"+ placeholder.substring(placeholder.length() - value.length(), placeholder.length());
             }else{
-                value = "0000";
+                value = "111";
                 CInstruction cInst = ((CInstruction)inst);
+                String dest = (cInst.dest != null ? cInstructionTableDest.get(cInst.dest) : "000");
+                String jmp = (cInst.jmp != null ? cInstructionTableJmp.get(cInst.jmp) : "000");
+                String comp = cInstructionTableComp.get(cInst.comp);
+                value = value + comp + dest + jmp;
                 System.out.println("**BC**");
                 System.out.println(inst.toString());
-                System.out.println("*** Dest *** " + cInst.dest );
-                System.out.println("*** Comp *** " + cInstructionTableComp.get(cInst.comp) );
-                System.out.println("*** Jmp *** " + cInst.jmp );
-                System.out.println("111" + value);
+                System.out.println("JMP: " + cInst.jmp);
+                // System.out.println("*** Dest *** " + cInstructionTableDest.get(cInst.dest) );
+                // System.out.println("*** Comp *** " + cInstructionTableComp.get(cInst.comp) );
+                // System.out.println("*** Jmp *** " + (cInst.jmp == null ? "000": cInstructionTableJmp.get(cInst.jmp) ) );
+                System.out.println(value);
                 System.out.println("**EC**");
             }
+
+            binary.add(value);
         }
     }
 
