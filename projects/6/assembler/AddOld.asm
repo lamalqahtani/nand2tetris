@@ -13,6 +13,6 @@ D=A
 D=D+A
 @END
 @0
-M=D;JMP
+M=D
 (END)
 @1
